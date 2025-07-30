@@ -1,5 +1,5 @@
-package com.example.cailights.ui.history.components
-
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,6 +13,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.cailights.ui.history.HighlightItem
 
+// Data class for processed highlights
+data class ProcessedHighlight(
+    val item: HighlightItem,
+    val originalIndex: Int,
+    val isLeftAligned: Boolean
+)
+
 @Composable
 fun TimelineSection(
     highlights: List<ProcessedHighlight>,
@@ -22,7 +29,7 @@ fun TimelineSection(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         TimelineContent(
             highlights = highlights,
@@ -30,7 +37,6 @@ fun TimelineSection(
         )
     }
 }
-
 
 @Composable
 private fun TimelineContent(
@@ -42,8 +48,8 @@ private fun TimelineContent(
             TimelineRow(
                 highlight = processedHighlight.item,
                 isLeftAligned = processedHighlight.isLeftAligned,
-                isFirst = index == 0,
-                isLast = index == highlights.lastIndex,
+                showTopLine = index > 0,
+                showBottomLine = index < highlights.lastIndex,
                 onHighlightClick = onHighlightClick
             )
         }
@@ -54,82 +60,98 @@ private fun TimelineContent(
 private fun TimelineRow(
     highlight: HighlightItem,
     isLeftAligned: Boolean,
-    isFirst: Boolean,
-    isLast: Boolean,
+    showTopLine: Boolean,
+    showBottomLine: Boolean,
     onHighlightClick: (HighlightItem) -> Unit
 ) {
+    val timelineHeight = 100.dp
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .height(timelineHeight),
         verticalAlignment = Alignment.Top
     ) {
         if (isLeftAligned) {
+            // Left-aligned layout: Card - Timeline+Date - Empty space
             TimelineCard(
                 highlight = highlight,
                 onHighlightClick = onHighlightClick,
                 modifier = Modifier
                     .weight(1f)
-                    .padding(end = 16.dp)
+                    .padding(end = 8.dp, top = 16.dp)
             )
-            TimelineIndicator(
-                isFirst = isFirst,
-                isLast = isLast,
-                modifier = Modifier.padding(top = 20.dp)
+            TimelineWithDate(
+                date = highlight.date,
+                showTopLine = showTopLine,
+                showBottomLine = showBottomLine,
+                totalHeight = timelineHeight,
+                isLeftAligned = true
             )
             Spacer(modifier = Modifier.weight(1f))
         } else {
+            // Right-aligned layout: Empty space - Timeline+Date - Card
             Spacer(modifier = Modifier.weight(1f))
-            TimelineIndicator(
-                isFirst = isFirst,
-                isLast = isLast,
-                modifier = Modifier.padding(top = 20.dp)
+            TimelineWithDate(
+                date = highlight.date,
+                showTopLine = showTopLine,
+                showBottomLine = showBottomLine,
+                totalHeight = timelineHeight,
+                isLeftAligned = false
             )
             TimelineCard(
                 highlight = highlight,
                 onHighlightClick = onHighlightClick,
                 modifier = Modifier
                     .weight(1f)
-                    .padding(start = 16.dp)
+                    .padding(start = 8.dp, top = 16.dp)
             )
         }
     }
 }
 
 @Composable
-private fun TimelineIndicator(
-    isFirst: Boolean,
-    isLast: Boolean,
+private fun TimelineWithDate(
+    date: String,
+    showTopLine: Boolean,
+    showBottomLine: Boolean,
+    totalHeight: Dp,
+    isLeftAligned: Boolean,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
+    Row(
+        modifier = modifier.height(totalHeight),
+        verticalAlignment = Alignment.Top
     ) {
-        if (!isFirst) {
-            Box(
-                modifier = Modifier
-                    .width(3.dp)
-                    .height(20.dp)
-                    .background(Color(0xFFE0E0E0))
+        if (isLeftAligned) {
+            // For left-aligned cards: Timeline - Date
+            TimelineIndicator(
+                showTopLine = showTopLine,
+                showBottomLine = showBottomLine,
+                totalHeight = totalHeight,
+                modifier = Modifier.padding(top = 16.dp)
             )
-        }
-        
-        Box(
-            modifier = Modifier
-                .size(12.dp)
-                .background(
-                    color = Color(0xFF4A4AFF),
-                    shape = RoundedCornerShape(6.dp)
-                )
-        )
-        
-        if (!isLast) {
-            Box(
-                modifier = Modifier
-                    .width(3.dp)
-                    .height(40.dp)
-                    .background(Color(0xFFE0E0E0))
+            Text(
+                text = date,
+                fontSize = 11.sp,
+                color = Color(0xFF6B7280),
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(start = 8.dp, top = 20.dp)
+            )
+        } else {
+            // For right-aligned cards: Date - Timeline
+            Text(
+                text = date,
+                fontSize = 11.sp,
+                color = Color(0xFF6B7280),
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(end = 8.dp, top = 20.dp)
+            )
+            TimelineIndicator(
+                showTopLine = showTopLine,
+                showBottomLine = showBottomLine,
+                totalHeight = totalHeight,
+                modifier = Modifier.padding(top = 16.dp)
             )
         }
     }
@@ -141,36 +163,88 @@ private fun TimelineCard(
     onHighlightClick: (HighlightItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    // Highlight card with bubble shape (no date label here anymore)
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = Color(0xFF1F1F1F),
         modifier = modifier
+            .fillMaxWidth()
+            .clickable { onHighlightClick(highlight) },
+        shadowElevation = 2.dp
     ) {
-        Text(
-            text = highlight.date,
-            fontSize = 12.sp,
-            color = Color.Gray,
-            modifier = Modifier.padding(bottom = 6.dp)
-        )
-        Surface(
-            shape = RoundedCornerShape(12.dp),
-            color = Color(0xFF2A2A2A),
-            modifier = Modifier.fillMaxWidth(),
-            onClick = { onHighlightClick(highlight) }
+        Column(
+            modifier = Modifier.padding(14.dp)
         ) {
+            // Main title
             Text(
                 text = highlight.title,
-                modifier = Modifier.padding(16.dp),
                 color = Color.White,
                 fontSize = 14.sp,
-                lineHeight = 20.sp,
-                fontWeight = FontWeight.Medium
+                lineHeight = 19.sp,
+                fontWeight = FontWeight.SemiBold
             )
+
+            // Secondary description (truncated version of fullContent)
+            val shortDescription = highlight.fullContent.take(60) +
+                    if (highlight.fullContent.length > 60) "..." else ""
+
+            if (shortDescription.isNotBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = shortDescription,
+                    color = Color(0xFFB0B0B0),
+                    fontSize = 12.sp,
+                    lineHeight = 16.sp,
+                    fontWeight = FontWeight.Normal
+                )
+            }
         }
     }
 }
 
-// Data class for processed highlights
-data class ProcessedHighlight(
-    val item: HighlightItem,
-    val originalIndex: Int,
-    val isLeftAligned: Boolean
-)
+@Composable
+private fun TimelineIndicator(
+    showTopLine: Boolean,
+    showBottomLine: Boolean,
+    totalHeight: Dp,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.height(totalHeight),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Top connecting line
+        if (showTopLine) {
+            Box(
+                modifier = Modifier
+                    .width(2.dp)
+                    .height(16.dp)
+                    .background(Color(0xFFE0E0E0))
+            )
+        } else {
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // Central dot
+        Box(
+            modifier = Modifier
+                .size(10.dp)
+                .background(
+                    color = Color(0xFF4A4AFF),
+                    shape = RoundedCornerShape(5.dp)
+                )
+        )
+
+        // Bottom connecting line - fill remaining space
+        if (showBottomLine) {
+            Box(
+                modifier = Modifier
+                    .width(2.dp)
+                    .weight(1f)
+                    .background(Color(0xFFE0E0E0))
+            )
+        } else {
+            Spacer(modifier = Modifier.weight(1f))
+        }
+    }
+}
