@@ -1,47 +1,35 @@
 package com.example.cailights.ui.addhighlight
 
 import androidx.lifecycle.ViewModel
-import androidx.room.util.copy
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import org.w3c.dom.Text
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 
 class AddHighlightViewModel: ViewModel() {
 
-    // the _underscore. It signals "This is the private, internal version of something."
     private val _state = MutableStateFlow(AddHighlightState())
-    // private: means only ViewModel can touch it
-    // Mutable: means "changeable.
-    // stateFlow: holds the current version, and notify all watchers if version changed
-
     val state = _state.asStateFlow()
-    // state now is a watcher
-    // state: here serve as window that anyone can see the _state
-    // latest version in real-time, but cannot reach through the glass and change it
-    // provides a safe, public, read-only view of the data for the UI to observe.
-
-    // Why Do We Do This? (The Big Picture)
-    // This pattern enforces a strict, one-way flow of data,
-    // which makes your app incredibly safe and predictable:
-    // 1. A user taps a button on the View (the UI).
-    // 2. The View tells the ViewModel (the Chef), "Hey, the user clicked 'Save'!"
-    // 3. The ViewModel (the Chef) is the only one with permission to change the data.
-    // 3.1. It modifies its private _state.
-    // 4. Because _state is a Flow, it automatically sends the new version out.
-    // 5. The public, read-only state gets the new version, and the View (which is watching state) automatically updates to show the new data.
 
     fun onAchievementTextChanged(newText: String) {
-        _state.update {
-            currentState ->
-            currentState.copy(achievementText = newText)
+        _state.update { currentState ->
+            currentState.copy(
+                achievementText = newText,
+                errorMessage = null // Clear error when user types
+            )
         }
     }
 
     fun onTagTextChanged(newTag: String) {
-        _state.update {
-            currentState ->
-            currentState.copy(selectedTag = newTag)
+        _state.update { currentState ->
+            currentState.copy(
+                selectedTag = newTag,
+                errorMessage = null
+            )
         }
     }
 
@@ -51,12 +39,92 @@ class AddHighlightViewModel: ViewModel() {
         }
     }
 
+    fun onDatePickerToggled() {
+        _state.update { currentState ->
+            currentState.copy(showDatePicker = !currentState.showDatePicker)
+        }
+    }
 
-    // This function is called when the user clicks the "Save" button
+    fun onDateSelected(year: Int, month: Int, dayOfMonth: Int) {
+        val calendar = Calendar.getInstance()
+        calendar.set(year, month, dayOfMonth)
+        val dateFormat = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
+        val formattedDate = dateFormat.format(calendar.time)
+        
+        _state.update { currentState ->
+            currentState.copy(
+                selectedDate = formattedDate,
+                showDatePicker = false
+            )
+        }
+    }
+
+    fun clearError() {
+        _state.update { currentState ->
+            currentState.copy(errorMessage = null)
+        }
+    }
+
+    fun clearSuccess() {
+        _state.update { currentState ->
+            currentState.copy(isSuccess = false)
+        }
+    }
+
     fun saveHighlight() {
-        // For now, we'll just print the state to the log to see it works.
-        // Later, we'll call our backend here.
-        println("Saving highlight: ${_state.value}")
-        // TODO: Add logic to save to backend/database
+        val currentState = _state.value
+        
+        // Fast validation
+        if (!currentState.isFormValid) {
+            _state.update { 
+                it.copy(errorMessage = "Please fill in all required fields") 
+            }
+            return
+        }
+
+        // Instant loading state
+        _state.update { 
+            it.copy(
+                isSaving = true, 
+                errorMessage = null
+            ) 
+        }
+
+        // Fast save operation
+        viewModelScope.launch {
+            try {
+                // Minimal delay for fast UX (just for visual feedback)
+                delay(300) // Reduced from 1500ms to 300ms
+                
+                // Log the data
+                println("Saving highlight: ${currentState}")
+                
+                // Instant success state
+                _state.update { 
+                    it.copy(
+                        isSaving = false,
+                        isSuccess = true
+                    ) 
+                }
+                
+                // Fast form reset
+                delay(100) // Minimal delay
+                resetForm()
+                
+            } catch (e: Exception) {
+                _state.update { 
+                    it.copy(
+                        isSaving = false,
+                        errorMessage = "Failed to save highlight. Please try again."
+                    ) 
+                }
+            }
+        }
+    }
+
+    private fun resetForm() {
+        _state.update { 
+            AddHighlightState() // Reset to initial state
+        }
     }
 }

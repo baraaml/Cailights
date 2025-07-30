@@ -1,11 +1,13 @@
 package com.example.cailights
 
-import AddHighlightScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +20,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -27,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.cailights.ui.addhighlight.AddHighlightScreen
 import com.example.cailights.ui.addhighlight.AddHighlightViewModel
 import com.example.cailights.ui.history.HistoryViewModel
 import com.example.cailights.ui.theme.CailightsTheme
@@ -34,8 +38,9 @@ import com.example.cailights.ui.history.HistoryScreen
 
 class MainActivity : ComponentActivity() {
 
-    // You don't need a ViewModel instance here for the whole activity.
-    // Each screen will create its own instance, which is cleaner.
+    // Pre-initialize ViewModels for faster navigation
+    private val historyViewModel: HistoryViewModel by viewModels()
+    private val addHighlightViewModel: AddHighlightViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,25 +48,30 @@ class MainActivity : ComponentActivity() {
             CailightsTheme {
                 val navController = rememberNavController()
 
-                NavHost(navController = navController, startDestination = "history") {
+                // Fast navigation with instant transitions
+                NavHost(
+                    navController = navController, 
+                    startDestination = "history",
+                    enterTransition = { fadeIn(animationSpec = tween(0)) }, // Instant
+                    exitTransition = { fadeOut(animationSpec = tween(0)) }   // Instant
+                ) {
 
                     composable("history") {
-                        // Create a ViewModel instance specifically for this screen
-                        val viewModel: HistoryViewModel by viewModels()
-                        val state by viewModel.state.collectAsState()
+                        // Use pre-initialized ViewModel for instant access
+                        val state by historyViewModel.state.collectAsState()
 
                         HistoryScreen(
                             state = state,
                             onAddHighlightClick = {
-                                navController.navigate("add_highlight")
+                                // Instant navigation - no animation delay
+                                navController.navigate("add_highlight") {
+                                    launchSingleTop = true
+                                }
                             },
-                            // --- This is the new code ---
-                            // When a highlight is clicked in the UI, call the ViewModel's function
-                            onHighlightClick = viewModel::onHighlightClicked,
-                            // When the sheet is dismissed, call the ViewModel's function
-                            onDismissBottomSheet = viewModel::onBottomSheetDismissed,
-                            onSearchToggled = viewModel::onSearchToggled,
-                            onSearchQueryChanged = viewModel::onSearchQueryChanged,
+                            onHighlightClick = historyViewModel::onHighlightClicked,
+                            onDismissBottomSheet = historyViewModel::onBottomSheetDismissed,
+                            onSearchToggled = historyViewModel::onSearchToggled,
+                            onSearchQueryChanged = historyViewModel::onSearchQueryChanged,
                             onHomeClick = {
                                 // Already on home, no action needed
                             },
@@ -75,18 +85,20 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable("add_highlight") {
-                        val viewModel: AddHighlightViewModel by viewModels()
-                        val state by viewModel.state.collectAsState()
+                        // Use pre-initialized ViewModel for instant screen load
+                        val state by addHighlightViewModel.state.collectAsState()
+                        
                         AddHighlightScreen(
                             state = state,
-                            // Pass the navigation event to the screen
-                            onNavigateBack = { navController.popBackStack() },
-                            onAchievementTextChanged = viewModel::onAchievementTextChanged,
-                            onTagTextChanged = viewModel::onTagTextChanged,
-                            // Pass the date change event to the ViewModel
-                            onDateTextChanged = viewModel::onDateTextChanged,
+                            onNavigateBack = { 
+                                // Fast back navigation
+                                navController.popBackStack() 
+                            },
+                            onAchievementTextChanged = addHighlightViewModel::onAchievementTextChanged,
+                            onTagTextChanged = addHighlightViewModel::onTagTextChanged,
                             onSaveClick = {
-                                viewModel.saveHighlight()
+                                addHighlightViewModel.saveHighlight()
+                                // Instant back navigation after save
                                 navController.popBackStack()
                             }
                         )
