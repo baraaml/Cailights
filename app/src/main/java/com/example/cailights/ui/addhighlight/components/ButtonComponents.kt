@@ -25,10 +25,10 @@ fun ModernSaveButton(
             .height(56.dp),
         shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFF4A4AFF),
-            contentColor = Color.White,
-            disabledContainerColor = Color(0xFFE5E7EB),
-            disabledContentColor = Color(0xFF9CA3AF)
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
         ),
         elevation = ButtonDefaults.buttonElevation(
             defaultElevation = 0.dp,

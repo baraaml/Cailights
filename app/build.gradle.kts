@@ -62,4 +62,7 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     // navigation
     implementation(libs.androidx.navigation.compose)
+
+    // Image loading
+    implementation("io.coil-kt:coil-compose:2.5.0")
 }

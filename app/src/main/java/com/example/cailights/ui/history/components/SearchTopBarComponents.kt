@@ -59,7 +59,7 @@ fun SearchAppBar(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Close search",
-                    tint = Color(0xFF000000)
+                    tint = MaterialTheme.colorScheme.onBackground
                 )
             }
         },
@@ -77,33 +77,27 @@ private fun OptimizedSearchField(
     onSearchAction: () -> Unit
 ) {
     // Pre-calculated constants to avoid recalculation
-    val searchFieldModifier = remember {
-        Modifier
-            .fillMaxWidth()
-            .height(44.dp)
-            .clip(RoundedCornerShape(22.dp))
-            .background(
-                Color(0xFFF5F5F5),
-                RoundedCornerShape(22.dp)
-            )
-            .padding(horizontal = 16.dp)
-    }
-    
-    val textStyle = remember {
-        TextStyle(
-            fontSize = 16.sp,
-            color = Color(0xFF1C1C1E),
-            fontWeight = FontWeight.Normal
+    val searchFieldModifier = Modifier
+        .fillMaxWidth()
+        .height(44.dp)
+        .clip(RoundedCornerShape(22.dp))
+        .background(
+            MaterialTheme.colorScheme.surfaceVariant,
+            RoundedCornerShape(22.dp)
         )
-    }
+        .padding(horizontal = 16.dp)
     
-    val placeholderStyle = remember {
-        TextStyle(
-            fontSize = 16.sp,
-            color = Color(0xFF9E9E9E),
-            fontWeight = FontWeight.Normal
-        )
-    }
+    val textStyle = TextStyle(
+        fontSize = 16.sp,
+        color = MaterialTheme.colorScheme.onSurface,
+        fontWeight = FontWeight.Normal
+    )
+    
+    val placeholderStyle = TextStyle(
+        fontSize = 16.sp,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        fontWeight = FontWeight.Normal
+    )
 
     Row(
         modifier = searchFieldModifier,
@@ -113,7 +107,7 @@ private fun OptimizedSearchField(
         Icon(
             imageVector = Icons.Default.Search,
             contentDescription = null, // Remove accessibility for performance
-            tint = Color(0xFF9E9E9E),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(20.dp)
         )
         
@@ -128,7 +122,7 @@ private fun OptimizedSearchField(
                 .focusRequester(focusRequester),
             textStyle = textStyle,
             singleLine = true,
-            cursorBrush = SolidColor(Color(0xFF4A4AFF)),
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { onSearchAction() }),
             decorationBox = { innerTextField ->

@@ -14,10 +14,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun GitHubStyleBottomNavigation(
+fun BottomNavigation(
     onHomeClick: () -> Unit,
     onLatestClick: () -> Unit,
     onProfileClick: () -> Unit,
+    currentRoute: String = "history",
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
@@ -46,13 +47,13 @@ fun GitHubStyleBottomNavigation(
                         fontWeight = FontWeight.Medium
                     ) 
                 },
-                selected = true,
+                selected = currentRoute == "history",
                 onClick = onHomeClick,
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color(0xFF4A4AFF),
-                    selectedTextColor = Color(0xFF4A4AFF),
-                    unselectedIconColor = Color.Gray,
-                    unselectedTextColor = Color.Gray,
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     indicatorColor = Color.Transparent
                 )
             )
@@ -71,13 +72,13 @@ fun GitHubStyleBottomNavigation(
                         fontWeight = FontWeight.Medium
                     ) 
                 },
-                selected = false,
+                selected = currentRoute == "latest",
                 onClick = onLatestClick,
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color(0xFF4A4AFF),
-                    selectedTextColor = Color(0xFF4A4AFF),
-                    unselectedIconColor = Color.Gray,
-                    unselectedTextColor = Color.Gray,
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     indicatorColor = Color.Transparent
                 )
             )
@@ -96,7 +97,7 @@ fun GitHubStyleBottomNavigation(
                         fontWeight = FontWeight.Medium
                     ) 
                 },
-                selected = false,
+                selected = currentRoute == "profile",
                 onClick = onProfileClick,
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = Color(0xFF4A4AFF),

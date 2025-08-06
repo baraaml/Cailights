@@ -1,7 +1,6 @@
 package com.example.cailights.ui.history
 
-import ProcessedHighlight
-import TimelineSection
+import com.example.cailights.ui.shared.timeline.ProcessedHighlight
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
@@ -21,6 +20,7 @@ fun HistoryScreen(
     state: HistoryState,
     onAddHighlightClick: () -> Unit,
     onHighlightClick: (HighlightItem) -> Unit,
+    onHighlightLongClick: (HighlightItem) -> Unit,
     onDismissBottomSheet: () -> Unit,
     onSearchToggled: () -> Unit = {},
     onSearchQueryChanged: (String) -> Unit = {},
@@ -63,10 +63,11 @@ fun HistoryScreen(
             )
         },
         bottomBar = {
-            GitHubStyleBottomNavigation(
+            BottomNavigation(
                 onHomeClick = onHomeClick,
                 onLatestClick = onLatestClick,
-                onProfileClick = onProfileClick
+                onProfileClick = onProfileClick,
+                currentRoute = "history"
             )
         }
     ) { paddingValues ->
@@ -74,6 +75,7 @@ fun HistoryScreen(
             state = state,
             processedHighlights = processedHighlights,
             onHighlightClick = onHighlightClick,
+            onHighlightLongClick = onHighlightLongClick,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
@@ -114,6 +116,7 @@ private fun HistoryContent(
     state: HistoryState,
     processedHighlights: List<ProcessedHighlight>,
     onHighlightClick: (HighlightItem) -> Unit,
+    onHighlightLongClick: (HighlightItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (state.isSearching) {
@@ -127,6 +130,7 @@ private fun HistoryContent(
         TimelineView(
             processedHighlights = processedHighlights,
             onHighlightClick = onHighlightClick,
+            onHighlightLongClick = onHighlightLongClick,
             modifier = modifier
         )
     }
@@ -139,13 +143,68 @@ private fun HistoryContent(
 private fun TimelineView(
     processedHighlights: List<ProcessedHighlight>,
     onHighlightClick: (HighlightItem) -> Unit,
+    onHighlightLongClick: (HighlightItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(modifier = modifier) {
         item {
             TimelineSection(
                 highlights = processedHighlights,
-                onHighlightClick = onHighlightClick
+                onHighlightClick = onHighlightClick,
+                onHighlightLongClick = onHighlightLongClick
+            )
+        }
+    }
+}
+
+/**
+ * Content-only version of HistoryScreen for use within paged navigation
+ * This version excludes Scaffold to avoid nested scaffolds
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HistoryScreenContent(
+    state: HistoryState,
+    onHighlightClick: (HighlightItem) -> Unit,
+    onHighlightLongClick: (HighlightItem) -> Unit,
+    onDismissBottomSheet: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        // Content area
+        val processedHighlights = remember(state.highlights, state.searchQuery) {
+            HighlightProcessor.processHighlightsForTimeline(state.highlights)
+        }
+
+        if (state.isSearching) {
+            SearchResultsList(
+                results = state.searchResults,
+                searchQuery = state.searchQuery,
+                onHighlightClick = onHighlightClick,
+                modifier = Modifier.weight(1f)
+            )
+        } else {
+            LazyColumn(modifier = Modifier.weight(1f)) {
+                item {
+                    TimelineSection(
+                        highlights = processedHighlights,
+                        onHighlightClick = onHighlightClick,
+                        onHighlightLongClick = onHighlightLongClick
+                    )
+                }
+            }
+        }
+    }
+    
+    // Show highlight detail bottom sheet when highlight is selected
+    if (state.selectedHighlight != null) {
+        ModalBottomSheet(
+            onDismissRequest = onDismissBottomSheet,
+            sheetState = rememberModalBottomSheetState()
+        ) {
+            HighlightDetailCard(
+                highlight = state.selectedHighlight,
+                onShareClick = { }
             )
         }
     }

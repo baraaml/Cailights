@@ -1,29 +1,29 @@
-import androidx.compose.foundation.clickable
-import androidx.compose.ui.unit.Dp
+package com.example.cailights.ui.history.components
+
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.cailights.ui.history.HighlightItem
-
-// Data class for processed highlights
-data class ProcessedHighlight(
-    val item: HighlightItem,
-    val originalIndex: Int,
-    val isLeftAligned: Boolean
-)
+import com.example.cailights.ui.shared.timeline.ProcessedHighlight
 
 @Composable
 fun TimelineSection(
     highlights: List<ProcessedHighlight>,
     onHighlightClick: (HighlightItem) -> Unit,
+    onHighlightLongClick: (HighlightItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -31,220 +31,203 @@ fun TimelineSection(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        TimelineContent(
-            highlights = highlights,
-            onHighlightClick = onHighlightClick
-        )
-    }
-}
-
-@Composable
-private fun TimelineContent(
-    highlights: List<ProcessedHighlight>,
-    onHighlightClick: (HighlightItem) -> Unit
-) {
-    Column {
         highlights.forEachIndexed { index, processedHighlight ->
             TimelineRow(
                 highlight = processedHighlight.item,
                 isLeftAligned = processedHighlight.isLeftAligned,
-                showTopLine = index > 0,
-                showBottomLine = index < highlights.lastIndex,
-                onHighlightClick = onHighlightClick
+                isFirst = index == 0,
+                isLast = index == highlights.lastIndex,
+                onHighlightClick = onHighlightClick,
+                onHighlightLongClick = onHighlightLongClick
             )
         }
     }
 }
 
 @Composable
-private fun TimelineRow(
+fun TimelineRow(
     highlight: HighlightItem,
     isLeftAligned: Boolean,
-    showTopLine: Boolean,
-    showBottomLine: Boolean,
-    onHighlightClick: (HighlightItem) -> Unit
+    isFirst: Boolean,
+    isLast: Boolean,
+    onHighlightClick: (HighlightItem) -> Unit,
+    onHighlightLongClick: (HighlightItem) -> Unit
 ) {
-    val timelineHeight = 100.dp
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(timelineHeight),
+            .height(IntrinsicSize.Min)
+            .padding(vertical = 8.dp),
         verticalAlignment = Alignment.Top
     ) {
         if (isLeftAligned) {
-            // Left-aligned layout: Card - Timeline+Date - Empty space
+            // Left: Card
             TimelineCard(
                 highlight = highlight,
                 onHighlightClick = onHighlightClick,
                 modifier = Modifier
                     .weight(1f)
-                    .padding(end = 8.dp, top = 16.dp)
+                    .padding(end = 8.dp),
+                onHighlightLongClick = onHighlightLongClick
             )
-            TimelineWithDate(
+            // Center: Node with connecting lines
+            TimelineNode(
+                isFirst = isFirst,
+                isLast = isLast,
+                modifier = Modifier.fillMaxHeight()
+            )
+            // Right: Date
+            DateLabel(
                 date = highlight.date,
-                showTopLine = showTopLine,
-                showBottomLine = showBottomLine,
-                totalHeight = timelineHeight,
-                isLeftAligned = true
+                textAlign = TextAlign.Start,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 8.dp)
             )
-            Spacer(modifier = Modifier.weight(1f))
         } else {
-            // Right-aligned layout: Empty space - Timeline+Date - Card
-            Spacer(modifier = Modifier.weight(1f))
-            TimelineWithDate(
+            // Left: Date
+            DateLabel(
                 date = highlight.date,
-                showTopLine = showTopLine,
-                showBottomLine = showBottomLine,
-                totalHeight = timelineHeight,
-                isLeftAligned = false
+                textAlign = TextAlign.End,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp)
             )
+            // Center: Node with connecting lines
+            TimelineNode(
+                isFirst = isFirst,
+                isLast = isLast,
+                modifier = Modifier.fillMaxHeight()
+            )
+            // Right: Card
             TimelineCard(
                 highlight = highlight,
                 onHighlightClick = onHighlightClick,
                 modifier = Modifier
                     .weight(1f)
-                    .padding(start = 8.dp, top = 16.dp)
+                    .padding(start = 8.dp),
+                onHighlightLongClick = onHighlightLongClick
             )
         }
     }
 }
 
 @Composable
-private fun TimelineWithDate(
+private fun DateLabel(
     date: String,
-    showTopLine: Boolean,
-    showBottomLine: Boolean,
-    totalHeight: Dp,
-    isLeftAligned: Boolean,
+    textAlign: TextAlign,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier.height(totalHeight),
-        verticalAlignment = Alignment.Top
+    Text(
+        text = date,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = textAlign,
+        modifier = modifier.padding(top = 4.dp) // Align text with the dot
+    )
+}
+
+// Alternative approach: Use a single continuous line with overlay dots
+@Composable
+private fun TimelineNode(
+    isFirst: Boolean,
+    isLast: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .width(24.dp)
+            .fillMaxHeight(),
+        contentAlignment = Alignment.TopCenter
     ) {
-        if (isLeftAligned) {
-            // For left-aligned cards: Timeline - Date
-            TimelineIndicator(
-                showTopLine = showTopLine,
-                showBottomLine = showBottomLine,
-                totalHeight = totalHeight,
-                modifier = Modifier.padding(top = 16.dp)
-            )
-            Text(
-                text = date,
-                fontSize = 11.sp,
-                color = Color(0xFF6B7280),
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(start = 8.dp, top = 20.dp)
-            )
-        } else {
-            // For right-aligned cards: Date - Timeline
-            Text(
-                text = date,
-                fontSize = 11.sp,
-                color = Color(0xFF6B7280),
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(end = 8.dp, top = 20.dp)
-            )
-            TimelineIndicator(
-                showTopLine = showTopLine,
-                showBottomLine = showBottomLine,
-                totalHeight = totalHeight,
-                modifier = Modifier.padding(top = 16.dp)
+        // Continuous vertical line (except for first and last partial sections)
+        if (!isFirst || !isLast) {
+            Box(
+                modifier = Modifier
+                    .width(2.dp)
+                    .fillMaxHeight()
+                    .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
             )
         }
+
+        // Top section - hide line for first item
+        if (isFirst) {
+            Box(
+                modifier = Modifier
+                    .width(2.dp)
+                    .height(16.dp) // Half height to center the dot
+                    .background(Color.Transparent)
+                    .align(Alignment.TopCenter)
+            )
+        }
+
+        // Bottom section - hide line for last item
+        if (isLast) {
+            Box(
+                modifier = Modifier
+                    .width(2.dp)
+                    .height(16.dp) // Half height from center down
+                    .background(Color.Transparent)
+                    .align(Alignment.BottomCenter)
+            )
+        }
+
+        // Central dot - positioned at the center
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(4.dp)
+                )
+                .align(Alignment.Center)
+        )
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun TimelineCard(
+fun TimelineCard(
     highlight: HighlightItem,
     onHighlightClick: (HighlightItem) -> Unit,
+    onHighlightLongClick: (HighlightItem) -> Unit, // New parameter for long click
     modifier: Modifier = Modifier
 ) {
-    // Highlight card with bubble shape (no date label here anymore)
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = Color(0xFF1F1F1F),
+        color = MaterialTheme.colorScheme.surface,
         modifier = modifier
-            .fillMaxWidth()
-            .clickable { onHighlightClick(highlight) },
+            .combinedClickable(
+                onClick = { onHighlightClick(highlight) },
+                onLongClick = { onHighlightLongClick(highlight) } // Handle long click
+            ),
         shadowElevation = 2.dp
-    ) {
+    ){
         Column(
             modifier = Modifier.padding(14.dp)
         ) {
-            // Main title
             Text(
                 text = highlight.title,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 14.sp,
                 lineHeight = 19.sp,
                 fontWeight = FontWeight.SemiBold
             )
 
-            // Secondary description (truncated version of fullContent)
-            val shortDescription = highlight.fullContent.take(60) +
-                    if (highlight.fullContent.length > 60) "..." else ""
+            val shortDescription = remember(highlight.fullContent) {
+                highlight.fullContent.take(60) + if (highlight.fullContent.length > 60) "..." else ""
+            }
 
             if (shortDescription.isNotBlank()) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = shortDescription,
-                    color = Color(0xFFB0B0B0),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp,
                     lineHeight = 16.sp,
                     fontWeight = FontWeight.Normal
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun TimelineIndicator(
-    showTopLine: Boolean,
-    showBottomLine: Boolean,
-    totalHeight: Dp,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier.height(totalHeight),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Top connecting line
-        if (showTopLine) {
-            Box(
-                modifier = Modifier
-                    .width(2.dp)
-                    .height(16.dp)
-                    .background(Color(0xFFE0E0E0))
-            )
-        } else {
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
-        // Central dot
-        Box(
-            modifier = Modifier
-                .size(10.dp)
-                .background(
-                    color = Color(0xFF4A4AFF),
-                    shape = RoundedCornerShape(5.dp)
-                )
-        )
-
-        // Bottom connecting line - fill remaining space
-        if (showBottomLine) {
-            Box(
-                modifier = Modifier
-                    .width(2.dp)
-                    .weight(1f)
-                    .background(Color(0xFFE0E0E0))
-            )
-        } else {
-            Spacer(modifier = Modifier.weight(1f))
         }
     }
 }

@@ -1,6 +1,6 @@
 package com.example.cailights.ui.history.utils
 
-import ProcessedHighlight
+import com.example.cailights.ui.shared.timeline.ProcessedHighlight
 import com.example.cailights.ui.history.HighlightItem
 import java.text.SimpleDateFormat
 import java.util.*
