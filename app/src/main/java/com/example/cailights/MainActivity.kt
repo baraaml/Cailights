@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -37,33 +38,63 @@ import com.example.cailights.ui.addhighlight.AddHighlightScreen
 import com.example.cailights.ui.addhighlight.AddHighlightViewModel
 import com.example.cailights.ui.history.HistoryViewModel
 import com.example.cailights.ui.history.components.BottomNavigation
+import com.example.cailights.ui.latest.LatestViewModel
+import com.example.cailights.ui.latest.LatestScreen
 import com.example.cailights.ui.profile.ProfileViewModel
 import com.example.cailights.ui.profile.ProfileScreenContent
+import com.example.cailights.ui.userprofile.UserProfileViewModel
+import com.example.cailights.ui.userprofile.UserProfileScreen
+import com.example.cailights.ui.highlightdetail.HighlightDetailViewModel
+import com.example.cailights.ui.highlightdetail.HighlightDetailScreen
+import com.example.cailights.ui.saved.SavedHighlightsViewModel
+import com.example.cailights.ui.saved.SavedHighlightsScreen
+import com.example.cailights.ui.foodforthought.EnhancedFoodForThoughtScreen
 import com.example.cailights.ui.theme.CailightsTheme
 import com.example.cailights.ui.history.HistoryScreenContent
 
 class MainActivity : ComponentActivity() {
 
-    // Pre-initialize ViewModels for faster navigation
     private val historyViewModel: HistoryViewModel by viewModels()
     private val addHighlightViewModel: AddHighlightViewModel by viewModels()
+    private val latestViewModel: LatestViewModel by viewModels()
     private val profileViewModel: ProfileViewModel by viewModels()
+    private val userProfileViewModel: UserProfileViewModel by viewModels()
+    private val highlightDetailViewModel: HighlightDetailViewModel by viewModels()
+    private val savedHighlightsViewModel: SavedHighlightsViewModel by viewModels()
 
     @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             CailightsTheme {
-                val navController = rememberNavController()
-                val coroutineScope = rememberCoroutineScope()
+                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                    val navController = rememberNavController()
+                    val coroutineScope = rememberCoroutineScope()
                 
-                // Pager state for swipe navigation between main screens
                 val pagerState = rememberPagerState(
-                    initialPage = 0, // Start with History (index 0)
-                    pageCount = { 3 } // History(0), Latest(1), Profile(2)
+                    initialPage = 0,
+                    pageCount = { 3 }
                 )
 
-                // WhatsApp-style slide navigation transitions
+                val currentPage by remember { androidx.compose.runtime.derivedStateOf { pagerState.currentPage } }
+
+                val navigateToAddHighlight = remember(navController) {
+                    { navController.navigate("add_highlight") { launchSingleTop = true } }
+                }
+                val navigateToFoodForThought = remember(navController) {
+                    { navController.navigate("food_for_thought") { launchSingleTop = true } }
+                }
+                val navigateToUserProfile = remember(navController) {
+                    { userId: String ->
+                        navController.navigate("user_profile/$userId") { launchSingleTop = true }
+                    }
+                }
+                val navigateToHighlightDetail = remember(navController) {
+                    { highlightId: Int, userId: String ->
+                        navController.navigate("highlight_detail/$highlightId/$userId") { launchSingleTop = true }
+                    }
+                }
+
                 NavHost(
                     navController = navController, 
                     startDestination = "main_pages",
@@ -93,51 +124,56 @@ class MainActivity : ComponentActivity() {
                     }
                 ) {
 
-                    // Main pages with swipe navigation
                     composable("main_pages") {
                         Scaffold(
+                            containerColor = MaterialTheme.colorScheme.background,
                             topBar = {
-                                // Hide top bar for profile page (page 2)
-                                if (pagerState.currentPage != 2) {
-                                    TopAppBar(
-                                        title = { 
-                                            val historyState by historyViewModel.state.collectAsState()
-                                            if (pagerState.currentPage == 0 && historyState.isSearching) {
-                                                com.example.cailights.ui.history.components.SearchAppBar(
-                                                    query = historyState.searchQuery,
-                                                    onQueryChanged = historyViewModel::onSearchQueryChanged,
-                                                    onCloseClicked = historyViewModel::onSearchToggled
-                                                )
-                                            } else {
+                                if (currentPage == 0) {
+                                    val historyState by historyViewModel.state.collectAsStateWithLifecycle()
+                                    if (historyState.isSearching) {
+                                        com.example.cailights.ui.history.components.SearchAppBar(
+                                            query = historyState.searchQuery,
+                                            onQueryChanged = historyViewModel::onSearchQueryChanged,
+                                            onCloseClicked = historyViewModel::onSearchToggled
+                                        )
+                                    } else {
+                                        TopAppBar(
+                                            title = {
                                                 Text(
-                                                    when (pagerState.currentPage) {
-                                                        0 -> "Cailights"
-                                                        1 -> "Latest"
-                                                        else -> "Cailights"
-                                                    },
+                                                    "Cailights",
                                                     fontWeight = FontWeight.Bold
                                                 )
-                                            }
-                                        },
-                                        actions = {
-                                            // Only show actions for History page
-                                            if (pagerState.currentPage == 0) {
-                                                val historyState by historyViewModel.state.collectAsState()
-                                                if (!historyState.isSearching) {
-                                                    IconButton(onClick = historyViewModel::onSearchToggled) {
-                                                        Icon(Icons.Default.Search, contentDescription = "Search")
-                                                    }
-                                                    IconButton(onClick = {
-                                                        navController.navigate("add_highlight") {
-                                                            launchSingleTop = true
-                                                        }
-                                                    }) {
-                                                        Icon(Icons.Default.Add, contentDescription = "Add Highlight")
-                                                    }
+                                            },
+                                            actions = {
+                                                IconButton(onClick = historyViewModel::onSearchToggled) {
+                                                    Icon(Icons.Default.Search, contentDescription = "Search")
                                                 }
                                             }
-                                        }
-                                    )
+                                        )
+                                    }
+                                } else if (currentPage == 1) {
+                                    val latestSearch by latestViewModel.searchState.collectAsStateWithLifecycle()
+                                    if (latestSearch.isSearching) {
+                                        com.example.cailights.ui.history.components.SearchAppBar(
+                                            query = latestSearch.searchQuery,
+                                            onQueryChanged = latestViewModel::onSearchQueryChanged,
+                                            onCloseClicked = latestViewModel::onSearchToggled
+                                        )
+                                    } else {
+                                        TopAppBar(
+                                            title = {
+                                                Text(
+                                                    "Latest",
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            },
+                                            actions = {
+                                                IconButton(onClick = latestViewModel::onSearchToggled) {
+                                                    Icon(Icons.Default.Search, contentDescription = "Search")
+                                                }
+                                            }
+                                        )
+                                    }
                                 }
                             },
                             bottomBar = {
@@ -157,13 +193,27 @@ class MainActivity : ComponentActivity() {
                                             pagerState.animateScrollToPage(2)
                                         }
                                     },
-                                    currentRoute = when (pagerState.currentPage) {
+                                    currentRoute = when (currentPage) {
                                         0 -> "history"
                                         1 -> "latest"
                                         2 -> "profile"
                                         else -> "history"
                                     }
                                 )
+                            },
+                            floatingActionButton = {
+                                if (currentPage == 0) {
+                                    FloatingActionButton(
+                                        onClick = navigateToAddHighlight,
+                                        containerColor = MaterialTheme.colorScheme.primary
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Add,
+                                            contentDescription = "Add Highlight",
+                                            tint = MaterialTheme.colorScheme.onPrimary
+                                        )
+                                    }
+                                }
                             }
                         ) { paddingValues ->
                             HorizontalPager(
@@ -172,42 +222,32 @@ class MainActivity : ComponentActivity() {
                             ) { page ->
                                 when (page) {
                                     0 -> {
-                                        // History Screen Content (with Scaffold padding)
-                                        val state by historyViewModel.state.collectAsState()
+                                        val state by historyViewModel.state.collectAsStateWithLifecycle()
                                         HistoryScreenContent(
                                             state = state,
-                                            onHighlightClick = historyViewModel::onHighlightClicked,
+                                            onHighlightClick = { highlight -> navigateToHighlightDetail(highlight.id, highlight.userId) },
                                             onHighlightLongClick = { /* TODO: Handle long click */ },
                                             onDismissBottomSheet = historyViewModel::onBottomSheetDismissed,
+                                            onUserClick = { user -> navigateToUserProfile(user.id) },
+                                            onFollowClick = { user -> historyViewModel.onFollowClicked(user) },
+                                            onNavigateToFoodForThought = navigateToFoodForThought,
                                             modifier = Modifier
                                                 .fillMaxSize()
                                                 .padding(paddingValues)
                                         )
                                     }
                                     1 -> {
-                                        // Latest Screen Content (with Scaffold padding)
-                                        Column(
+                                        LatestScreen(
+                                            viewModel = latestViewModel,
+                                            onUserClick = { userId -> navigateToUserProfile(userId) },
+                                            onHighlightClick = { highlightId, userId -> navigateToHighlightDetail(highlightId, userId) },
                                             modifier = Modifier
                                                 .fillMaxSize()
                                                 .padding(paddingValues)
-                                                .padding(16.dp),
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                            verticalArrangement = Arrangement.Center
-                                        ) {
-                                            Text("Latest Screen - Coming Soon!", fontSize = 24.sp)
-                                            Spacer(modifier = Modifier.height(16.dp))
-                                            Button(onClick = {
-                                                coroutineScope.launch {
-                                                    pagerState.animateScrollToPage(0)
-                                                }
-                                            }) {
-                                                Text("Go to Home")
-                                            }
-                                        }
+                                        )
                                     }
                                     2 -> {
-                                        // Profile Screen Content (full screen, no padding)
-                                        val state by profileViewModel.state.collectAsState()
+                                        val state by profileViewModel.state.collectAsStateWithLifecycle()
                                         ProfileScreenContent(
                                             state = state,
                                             onHighlightClick = profileViewModel::onHighlightClicked,
@@ -217,6 +257,9 @@ class MainActivity : ComponentActivity() {
                                             onSearchQueryChanged = profileViewModel::onSearchQueryChanged,
                                             onFilterClick = profileViewModel::onFilterClicked,
                                             onYearSelected = profileViewModel::onYearSelected,
+                                            onSavedClick = {
+                                                navController.navigate("saved_highlights") { launchSingleTop = true }
+                                            },
                                             modifier = Modifier.fillMaxSize()
                                         )
                                     }
@@ -226,24 +269,81 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable("add_highlight") {
-                        // Use pre-initialized ViewModel for instant screen load
-                        val state by addHighlightViewModel.state.collectAsState()
+                        val state by addHighlightViewModel.state.collectAsStateWithLifecycle()
                         
                         AddHighlightScreen(
                             state = state,
                             onNavigateBack = { 
-                                // Fast back navigation
                                 navController.popBackStack() 
                             },
                             onAchievementTextChanged = addHighlightViewModel::onAchievementTextChanged,
                             onTagTextChanged = addHighlightViewModel::onTagTextChanged,
                             onSaveClick = {
                                 addHighlightViewModel.saveHighlight()
-                                // Instant back navigation after save
                                 navController.popBackStack()
                             }
                         )
                     }
+
+                    composable("user_profile/{userId}") { backStackEntry ->
+                        val userId = backStackEntry.arguments?.getString("userId") ?: ""
+                        
+                        LaunchedEffect(userId) {
+                            userProfileViewModel.loadUserProfile(userId)
+                        }
+                        
+                        UserProfileScreen(
+                            viewModel = userProfileViewModel,
+                            onNavigateBack = {
+                                navController.popBackStack()
+                            }
+                        )
+                    }
+
+                    composable("highlight_detail/{highlightId}/{userId}") { backStackEntry ->
+                        val highlightId = backStackEntry.arguments?.getString("highlightId")?.toIntOrNull() ?: 0
+                        val userId = backStackEntry.arguments?.getString("userId") ?: ""
+                        
+                        LaunchedEffect(highlightId, userId) {
+                            highlightDetailViewModel.loadHighlight(highlightId, userId)
+                        }
+                        
+                        HighlightDetailScreen(
+                            viewModel = highlightDetailViewModel,
+                            onNavigateBack = {
+                                navController.popBackStack()
+                            },
+                            onUserClick = { clickedUserId ->
+                                navController.navigate("user_profile/$clickedUserId") {
+                                    launchSingleTop = true
+                                }
+                            }
+                        )
+                    }
+
+                    composable("saved_highlights") {
+                        SavedHighlightsScreen(
+                            viewModel = savedHighlightsViewModel,
+                            onNavigateBack = {
+                                navController.popBackStack()
+                            },
+                            onHighlightClick = { highlightId, userId ->
+                                navController.navigate("highlight_detail/$highlightId/$userId") {
+                                    launchSingleTop = true
+                                }
+                            },
+                            onUserClick = { userId ->
+                                navController.navigate("user_profile/$userId") {
+                                    launchSingleTop = true
+                                }
+                            }
+                        )
+                    }
+                    
+                    composable("food_for_thought") {
+                        EnhancedFoodForThoughtScreen()
+                    }
+                }
                 }
             }
         }

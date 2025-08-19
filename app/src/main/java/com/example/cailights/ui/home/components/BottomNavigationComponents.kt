@@ -22,10 +22,10 @@ fun BottomNavigation(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
-        // Top border line like GitHub mobile
+                // Top border line like GitHub mobile
         HorizontalDivider(
             thickness = 0.5.dp,
-            color = Color(0xFFE1E4E8)
+            color = MaterialTheme.colorScheme.outline
         )
         NavigationBar(
             containerColor = MaterialTheme.colorScheme.background,
@@ -100,10 +100,10 @@ fun BottomNavigation(
                 selected = currentRoute == "profile",
                 onClick = onProfileClick,
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color(0xFF4A4AFF),
-                    selectedTextColor = Color(0xFF4A4AFF),
-                    unselectedIconColor = Color.Gray,
-                    unselectedTextColor = Color.Gray,
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     indicatorColor = Color.Transparent
                 )
             )

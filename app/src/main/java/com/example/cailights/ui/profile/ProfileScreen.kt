@@ -3,32 +3,28 @@ package com.example.cailights.ui.profile
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.cailights.ui.history.HighlightItem
-import com.example.cailights.ui.history.components.BottomNavigation
 import com.example.cailights.ui.history.components.HighlightDetailCard
-import com.example.cailights.ui.profile.components.ActivityGraphComponent
-import com.example.cailights.ui.profile.components.ProfileActionBarComponent
-import com.example.cailights.ui.profile.components.ProfileHeaderComponent
-import com.example.cailights.ui.profile.components.ProfilePhotoComponent
-import com.example.cailights.ui.profile.components.ProfileTimelineComponent
-import com.example.cailights.ui.profile.components.YearSelectorComponent
+import com.example.cailights.ui.history.components.SearchAppBar
 import com.example.cailights.ui.history.components.SearchResultsList
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.ui.zIndex
+import com.example.cailights.ui.profile.components.ProfilePhotoComponent
+import com.example.cailights.ui.shared.components.HighlightCard
 
 
 /**
@@ -46,92 +42,135 @@ fun ProfileScreenContent(
     onSearchQueryChanged: (String) -> Unit = {},
     onFilterClick: () -> Unit = {},
     onYearSelected: (Int) -> Unit = {},
+    onSavedClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         if (state.isSearching) {
-            // When searching, show search results in a full-screen layout
-            SearchResultsList(
-                results = state.searchResults,
-                searchQuery = state.searchQuery,
-                onHighlightClick = onHighlightClick,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background)
-                    .padding(top = 64.dp) // Leave space for search bar
-            )
+            Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+                SearchAppBar(
+                    query = state.searchQuery,
+                    onQueryChanged = onSearchQueryChanged,
+                    onCloseClicked = onSearchToggled
+                )
+                SearchResultsList(
+                    results = state.searchResults,
+                    searchQuery = state.searchQuery,
+                    onHighlightClick = onHighlightClick,
+                    modifier = Modifier.weight(1f)
+                )
+            }
         } else {
-            // When not searching, show normal profile content
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.background),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(16.dp)
             ) {
+                // Profile header (photo + name)
                 item(key = "profile_photo") {
                     ProfilePhotoComponent(
                         userName = state.userName,
                         userPhotoUrl = state.userPhotoUrl
                     )
                 }
-                
-                item(key = "action_bar") {
-                    ProfileActionBarComponent(
-                        currentYear = state.currentYear,
-                        onSearchClick = onSearchToggled,
-                        onFilterClick = onFilterClick,
-                        onYearClick = { onYearSelected(state.currentYear) }
-                    )
+
+                // Quick actions row (Saved, Search)
+                item(key = "quick_actions") {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = onSavedClick) {
+                            Icon(
+                                imageVector = Icons.Default.Bookmark,
+                                contentDescription = "Saved Highlights",
+                                tint = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                        IconButton(onClick = onSearchToggled) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Search",
+                                tint = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    }
                 }
-                
+
                 item(key = "divider") {
                     HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 24.dp),
+                        modifier = Modifier.padding(horizontal = 8.dp),
                         color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
                     )
                 }
-                
-                item(key = "timeline") {
-                    ProfileTimelineComponent(
-                        historyHighlights = state.historyHighlights,
-                        onHighlightClick = onHighlightClick,
-                        onHighlightLongClick = onHighlightLongClick
-                    )
+
+                // Pinned section
+                if (state.pinnedAchievement != null) {
+                    item(key = "pinned_header") {
+                        Text(
+                            text = "\uD83D\uDCCC Pinned",
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                    }
+                    item(key = "pinned_card") {
+                        val pinned = state.pinnedAchievement
+                        val pinnedHighlight = HighlightItem(
+                            id = -1,
+                            date = pinned!!.date,
+                            title = pinned.title,
+                            fullContent = pinned.description,
+                            tag = "",
+                            username = "You",
+                            userId = "current_user"
+                        )
+                        HighlightCard(
+                            highlight = pinnedHighlight,
+                            onClick = { onHighlightClick(pinnedHighlight) },
+                            showPinIndicator = true,
+                            showSaveButton = false
+                        )
+                    }
                 }
-                
-                // Bottom spacing for comfortable scrolling
-                item(key = "bottom_spacer") { 
-                    Spacer(modifier = Modifier.height(24.dp)) 
+
+                // Recent Highlights
+                if (state.historyHighlights.isNotEmpty()) {
+                    item(key = "recent_header") {
+                        Text(
+                            text = "Recent Highlights",
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                    }
+                    items(state.historyHighlights, key = { it.id }) { highlight ->
+                        HighlightCard(
+                            highlight = highlight,
+                            onClick = { onHighlightClick(highlight) },
+                            showSaveButton = false
+                        )
+                    }
+                }
+
+                item(key = "bottom_spacer") {
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
             }
         }
-        
-        // Floating search overlay when search is active
-        if (state.isSearching) {
-            Box(
-                modifier = Modifier
-                    .statusBarsPadding()
-                    .zIndex(1f)
+
+        // Bottom sheet for highlight detail
+        if (state.selectedHighlight != null) {
+            ModalBottomSheet(
+                onDismissRequest = onDismissBottomSheet,
+                sheetState = rememberModalBottomSheetState()
             ) {
-                com.example.cailights.ui.history.components.SearchAppBar(
-                    query = state.searchQuery,
-                    onQueryChanged = onSearchQueryChanged,
-                    onCloseClicked = onSearchToggled
+                HighlightDetailCard(
+                    highlight = state.selectedHighlight,
+                    onShareClick = {}
                 )
             }
-        }
-    }
-    
-    // Show highlight detail bottom sheet when highlight is selected
-    if (state.selectedHighlight != null) {
-        ModalBottomSheet(
-            onDismissRequest = onDismissBottomSheet,
-            sheetState = rememberModalBottomSheetState()
-        ) {
-            HighlightDetailCard(
-                highlight = state.selectedHighlight,
-                onShareClick = { }
-            )
         }
     }
 }

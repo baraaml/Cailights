@@ -27,6 +27,7 @@ fun AddHighlightScreen(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             AddHighlightTopBar(
                 onNavigateBack = onNavigateBack

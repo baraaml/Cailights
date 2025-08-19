@@ -129,7 +129,7 @@ private fun OptimizedSearchField(
                 Box {
                     if (query.isEmpty()) {
                         Text(
-                            text = "Search highlights...",
+                            text = "Search highlights",
                             style = placeholderStyle
                         )
                     }
@@ -148,7 +148,7 @@ private fun OptimizedSearchField(
                 Icon(
                     imageVector = Icons.Default.Clear,
                     contentDescription = null, // Remove for performance
-                    tint = Color(0xFF9E9E9E),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -168,7 +168,7 @@ fun DefaultTopAppBar(
             Text(
                 "Cailights",
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF000000)
+                color = MaterialTheme.colorScheme.onBackground
             )
         },
         actions = {
@@ -176,14 +176,14 @@ fun DefaultTopAppBar(
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = "Search",
-                    tint = Color(0xFF000000)
+                    tint = MaterialTheme.colorScheme.onBackground
                 )
             }
             IconButton(onClick = onAddHighlightClick) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Add Highlight",
-                    tint = Color(0xFF000000)
+                    tint = MaterialTheme.colorScheme.onBackground
                 )
             }
         },

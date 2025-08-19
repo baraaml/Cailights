@@ -99,13 +99,13 @@ private fun SearchResultItem(
                     text = highlight.title,
                     fontWeight = FontWeight.Medium,
                     fontSize = 16.sp,
-                    color = Color(0xFF4A4AFF),
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f)
                 )
                 Text(
                     text = highlight.date,
                     fontSize = 12.sp,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))

@@ -3,6 +3,7 @@ package com.example.cailights.ui.profile.components
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -17,6 +18,7 @@ fun ProfileActionBarComponent(
     onSearchClick: () -> Unit,
     onFilterClick: () -> Unit,
     onYearClick: () -> Unit,
+    onSavedClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -48,6 +50,14 @@ fun ProfileActionBarComponent(
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            IconButton(onClick = onSavedClick) {
+                Icon(
+                    imageVector = Icons.Default.Bookmark,
+                    contentDescription = "Saved Highlights",
+                    tint = MaterialTheme.colorScheme.onBackground
+                )
+            }
+            
             IconButton(onClick = onSearchClick) {
                 Icon(
                     imageVector = Icons.Default.Search,

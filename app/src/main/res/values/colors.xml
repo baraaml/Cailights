@@ -1,5 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Primary Brand Colors -->
+    <color name="primary_light">#4A90E2</color>
+    <color name="primary_dark">#357ABD</color>
+    <color name="primary_container_light">#E3F2FD</color>
+    <color name="primary_container_dark">#1A237E</color>
+    
+    <!-- Secondary Colors -->
+    <color name="secondary_light">#7B1FA2</color>
+    <color name="secondary_dark">#4A148C</color>
+    <color name="secondary_container_light">#F3E5F5</color>
+    <color name="secondary_container_dark">#6A1B9A</color>
+    
+    <!-- Surface Colors -->
+    <color name="surface_light">#FEFBFF</color>
+    <color name="surface_dark">#10131C</color>
+    <color name="surface_container_light">#F3F0F4</color>
+    <color name="surface_container_dark">#1E2128</color>
+    <color name="surface_variant_light">#DFE2EB</color>
+    <color name="surface_variant_dark">#43474E</color>
+    
+    <!-- Background Colors -->
+    <color name="background_light">#FEFBFF</color>
+    <color name="background_dark">#10131C</color>
+    
+    <!-- Text Colors -->
+    <color name="on_primary_light">#FFFFFF</color>
+    <color name="on_primary_dark">#FFFFFF</color>
+    <color name="on_secondary_light">#FFFFFF</color>
+    <color name="on_secondary_dark">#FFFFFF</color>
+    <color name="on_surface_light">#1C1B1F</color>
+    <color name="on_surface_dark">#E6E1E5</color>
+    <color name="on_surface_variant_light">#49454F</color>
+    <color name="on_surface_variant_dark">#CAC4D0</color>
+    <color name="on_background_light">#1C1B1F</color>
+    <color name="on_background_dark">#E6E1E5</color>
+    
+    <!-- Outline Colors -->
+    <color name="outline_light">#79747E</color>
+    <color name="outline_dark">#938F99</color>
+    <color name="outline_variant_light">#CAC4D0</color>
+    <color name="outline_variant_dark">#49454F</color>
+    
+    <!-- Error Colors -->
+    <color name="error_light">#BA1A1A</color>
+    <color name="error_dark">#FFB4AB</color>
+    <color name="error_container_light">#FFDAD6</color>
+    <color name="error_container_dark">#93000A</color>
+    <color name="on_error_light">#FFFFFF</color>
+    <color name="on_error_dark">#690005</color>
+    <color name="on_error_container_light">#410002</color>
+    <color name="on_error_container_dark">#FFDAD6</color>
+    
+    <!-- Success Colors (Custom) -->
+    <color name="success_light">#2E7D32</color>
+    <color name="success_dark">#4CAF50</color>
+    <color name="success_container_light">#C8E6C9</color>
+    <color name="success_container_dark">#1B5E20</color>
+    
+    <!-- Legacy Colors (kept for compatibility) -->
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>
